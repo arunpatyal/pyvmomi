@@ -516,6 +516,18 @@ def ParseData(parser, data):
       pe = ParserError("xml document: "
                        "{0} parse error at: "
                        "line:{1}, col:{2}".format(data, line, col))
+
+      ## Added to debug VMWare No Parsing Bug
+      logPrefix = "Pyvmomi SDK LOG >>> "
+      try:
+         logfilename = "pyvmomi2.log"
+         logfile = open(logfilename, 'w+')
+         logfile.write(logPrefix + "Full Data is :::" + str(data.read()) + "\n\n\n")
+         logfile.close()
+      except Exception as e:
+         print(logPrefix + "Unable to open logfile:: Error:: %s" % (e))
+      ## End
+
       # use six.reraise for python 2.x and 3.x compatability
       reraise(ParserError, pe, tb)
 
@@ -725,6 +737,17 @@ class SoapDeserializer(ExpatDeserializerNSHandlers):
          return
 
       data = self.data
+      ## Added to debug VMWare No Parsing Bug
+      logPrefix = "Pyvmomi SDK LOG >>> "
+      try:
+         logfilename = "pyvmomi.log"
+         logfile = open(logfilename, 'w+')
+         logfile.write(logPrefix + "Data is :::" + str(data) + "\n")
+         logfile.write(logPrefix + "Object is :::" + str(obj) + "\n")
+      except Exception as e:
+         print(logPrefix + "Unable to open logfile:: Error:: %s" % (e))
+      ## End
+
       if isinstance(obj, type) or isinstance(obj, type(Exception)):
          if obj is type:
             if data is None or data == '':
@@ -734,6 +757,8 @@ class SoapDeserializer(ExpatDeserializerNSHandlers):
                   # val in type val is not namespace qualified
                   # However, this doesn't hurt to strip out namespace
                   ns, name = self.GetNSAndWsdlname(data)
+                  logfile.write(logPrefix + "ns is :::" + str(ns) + "\n")
+                  logfile.write(logPrefix + "name is :::" + str(name) + "\n")
                   obj = GuessWsdlType(name)
                except KeyError:
                   raise TypeError(data)
@@ -797,6 +822,7 @@ class SoapDeserializer(ExpatDeserializerNSHandlers):
             self.result = obj
             SetHandlers(self.parser, self.origHandlers)
             del self.parser, self.origHandlers, self.stack, self.resultType
+      logfile.close()
 
    ## Handle text data
    def CharacterDataHandler(self, data):
